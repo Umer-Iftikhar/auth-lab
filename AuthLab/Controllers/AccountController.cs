@@ -35,6 +35,7 @@ namespace AuthLab.Controllers
                 return BadRequest(errors);
             }
 
+            await _userManager.AddToRoleAsync(user, "User");
 
             return Created("", new { id = user.Id, message = "User registered successfully" });
         }
@@ -54,7 +55,9 @@ namespace AuthLab.Controllers
                 return Unauthorized("Invalid Email or Password");
             }
 
-            var authResponse = _tokenService.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var authResponse = _tokenService.GenerateToken(user, roles);
 
             return Ok(authResponse);
         }

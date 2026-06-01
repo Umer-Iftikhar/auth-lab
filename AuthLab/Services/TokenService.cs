@@ -16,7 +16,7 @@ namespace AuthLab.Services
         {
             _jwtConfig = options.Value;
         }
-        public AuthResponseDto GenerateToken(ApplicationUser user)
+        public AuthResponseDto GenerateToken(ApplicationUser user, IList<string> roles)
         {
             // Create claims based on the user information
             // A Claim is a statement about the user (e.g., user ID, username, email)
@@ -26,6 +26,12 @@ namespace AuthLab.Services
                 new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty)
             };
+
+            // Add role claims for each role the user belongs to. This allows the token to carry information about the user's roles, which can be used for authorization purposes.
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.SecretKey));
 

@@ -38,10 +38,34 @@ namespace AuthLab.Controllers
                 Username = User.Identity?.Name, 
                 UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value, 
                 Email = User.FindFirst(ClaimTypes.Email)?.Value,
-                AllClaims = userClaims
+                AllClaims = userClaims,
+                role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "No Role"
             };
 
             return Ok(userInfo);
+        }
+
+        [HttpGet("admin")]
+        [Authorize(Policy = "AdminOnly")]
+        public IActionResult GetAdminData()
+        {
+            return Ok(new
+            {
+                Message = "Hello Admin! You have accessed a restricted endpoint.",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+
+        [HttpGet("dashboard")]
+        [Authorize(Policy = "AdminOrUser")]
+        public IActionResult GetDashboardData()
+        {
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "No Role";
+            return Ok(new
+            {
+                Message = $"Hello {role}! Here is your dashboard data.",
+                Timestamp = DateTime.UtcNow
+            });
         }
     }
 }

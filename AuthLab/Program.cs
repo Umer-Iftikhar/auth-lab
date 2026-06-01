@@ -3,6 +3,7 @@ using AuthLab.Models;
 using AuthLab.Services;
 using AuthLab.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -27,6 +28,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
 })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
 // Configure JWT settings
@@ -60,6 +62,13 @@ builder.Services.AddAuthentication(options =>
             // new SymmetricSecurityKey(...) — wraps those bytes into a key object that the signing algorithm can use.
         };
     });
+
+builder.Services.AddAuthorization(options => // Add authorization policies
+{
+    options.AddPolicy("AdminOrUser", policy =>  // Define a policy named "AdminOrUser" that requires the user to have either the "Admin" or "User" role
+        policy.RequireRole("Admin", "User"));   // This policy can be applied to endpoints to restrict access to users with either role.
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin")); // Define a policy named "AdminOnly" that requires the user to have the "Admin" role.
+});
 
 // Register the TokenService with the DI container 
 builder.Services.AddScoped<TokenService>();
@@ -102,6 +111,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    await DatabaseSeeder.SeedAsync(app.Services);
     app.UseSwagger();
     app.UseSwaggerUI();
 }
