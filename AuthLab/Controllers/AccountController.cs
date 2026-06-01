@@ -1,6 +1,6 @@
 ﻿using AuthLab.DTOs;
 using AuthLab.Models;
-using Microsoft.AspNetCore.Http;
+using AuthLab.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +11,11 @@ namespace AuthLab.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        public AccountController(UserManager<ApplicationUser> userManager)
+        private readonly TokenService _tokenService;
+        public AccountController(UserManager<ApplicationUser> userManager, TokenService tokenService)
         {
             _userManager = userManager;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -52,7 +54,9 @@ namespace AuthLab.Controllers
                 return Unauthorized("Invalid Email or Password");
             }
 
-            return Ok(new { id = user.Id, email = user.Email, role = "User", message = "Login successful" });
+            var authResponse = _tokenService.GenerateToken(user);
+
+            return Ok(authResponse);
         }
     }
 }

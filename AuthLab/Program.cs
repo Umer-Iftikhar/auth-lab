@@ -1,6 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using AuthLab.Data;
 using AuthLab.Models;
+using AuthLab.Services;
+using AuthLab.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,12 +29,73 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 })
     .AddEntityFrameworkStores<AppDbContext>();
 
+// Configure JWT settings
+var jwtConfig = builder.Configuration.GetSection("JwtSettings").Get<JwtConfig>(); // Grab the JwtSettings section from config and deserialize it into a JwtConfig object.
+// GetSection().Get<JwtConfig>() — creates a one-time snapshot of the config values right now. Just a plain object, no DI involvement.
+
+builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtSettings")); // Bind JwtConfig to the "JwtSettings" section in appsettings.json
+// Services.Configure<JwtConfig>() — registers JwtConfig with the DI container so you can inject IOptions<JwtConfig> anywhere in your app.
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Set the default authentication scheme to JWT Bearer
+    // "Use JWT to authenticate every request"
+
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; // Set the default challenge scheme to JWT Bearer (used when authentication fails and a challenge is issued)
+    // "When auth fails, return 401"
+})
+    .AddJwtBearer(options => // Add JWT Bearer authentication
+    {
+        options.TokenValidationParameters = new TokenValidationParameters // Configure the parameters for validating JWT tokens
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfig.Issuer,
+            ValidAudience = jwtConfig.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.SecretKey))
+            // jwtConfig.SecretKey — your secret key string from user secrets.
+            // Encoding.UTF8.GetBytes(...) — converts that string to a byte array. Why? Because cryptographic algorithms work on bytes, not strings.
+            // new SymmetricSecurityKey(...) — wraps those bytes into a key object that the signing algorithm can use.
+        };
+    });
+
+// Register the TokenService with the DI container 
+builder.Services.AddScoped<TokenService>();
+
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer(); 
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme // Define a security scheme for JWT Bearer authentication in Swagger
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement // Add a security requirement to indicate that the API endpoints require JWT Bearer authentication
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
