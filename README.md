@@ -7,13 +7,13 @@ A hands-on JWT authentication API built with ASP.NET Core 8 and MySQL. Built to 
 ## Screenshots
 
 ### Swagger UI
-![Swagger UI](.docs/images/swagger-ui.png)
+![Swagger UI](docs/images/swagger-ui.png)
 
 ### Login Response
-![Login Response](.docs/images/login-response.png)
+![Login Response](docs/images/login-response.png)
 
 ### Protected Endpoint
-![Protected Endpoint](.docs/images/protected-endpoint.png)
+![Protected Endpoint](docs/images/protected-endpoint.png)
 
 ## What's Built
 
