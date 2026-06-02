@@ -1,6 +1,7 @@
 ﻿using AuthLab.DTOs;
 using AuthLab.Models;
-using AuthLab.Services;
+using AuthLab.Services.Implementations;
+using AuthLab.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,11 +12,13 @@ namespace AuthLab.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly TokenService _tokenService;
-        public AccountController(UserManager<ApplicationUser> userManager, TokenService tokenService)
+        private readonly ITokenService _tokenService;
+        private readonly IRefreshTokenService _refreshTokenService;
+        public AccountController(UserManager<ApplicationUser> userManager, ITokenService tokenService, IRefreshTokenService refreshTokenService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
+            _refreshTokenService = refreshTokenService;
         }
 
         [HttpPost("register")]
@@ -58,6 +61,11 @@ namespace AuthLab.Controllers
             var roles = await _userManager.GetRolesAsync(user);
 
             var authResponse = _tokenService.GenerateToken(user, roles);
+
+            var refreshToken = await _refreshTokenService.GenerateRefreshToken(user.Id);
+
+            authResponse.RefreshToken = refreshToken;
+
 
             return Ok(authResponse);
         }

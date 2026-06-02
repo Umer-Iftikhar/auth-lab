@@ -1,5 +1,6 @@
 ﻿using AuthLab.DTOs;
 using AuthLab.Models;
+using AuthLab.Services.Interfaces;
 using AuthLab.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -7,9 +8,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace AuthLab.Services
+namespace AuthLab.Services.Implementations
 {
-    public class TokenService
+    public class TokenService : ITokenService
     {
         private readonly JwtConfig _jwtConfig;
         public TokenService(IOptions<JwtConfig> options)
@@ -64,7 +65,7 @@ namespace AuthLab.Services
 
             return new AuthResponseDto
             {
-                Token = tokenString,
+                AccessToken = tokenString,
                 ExpiresAt = expiresAt
             };
         }

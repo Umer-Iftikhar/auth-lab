@@ -1,6 +1,7 @@
 using AuthLab.Data;
 using AuthLab.Models;
-using AuthLab.Services;
+using AuthLab.Services.Implementations;
+using AuthLab.Services.Interfaces;
 using AuthLab.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -70,8 +71,9 @@ builder.Services.AddAuthorization(options => // Add authorization policies
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin")); // Define a policy named "AdminOnly" that requires the user to have the "Admin" role.
 });
 
-// Register the TokenService with the DI container 
-builder.Services.AddScoped<TokenService>();
+// Register the Services with the DI container 
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 // Add services to the container.
 
