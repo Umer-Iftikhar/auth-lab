@@ -126,4 +126,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapGet("/api/minimal/hello", () => "Hello from minimal API!")
+    .WithTags("Minimal")
+    .WithSummary("Hello from minimal API");
+
+app.MapGet("/api/minimal/protected", () => "Hello from protected minimal API!")
+    .WithTags("Minimal")
+    .RequireAuthorization();
+
 app.Run();
