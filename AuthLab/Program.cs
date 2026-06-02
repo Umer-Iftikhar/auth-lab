@@ -1,4 +1,5 @@
 using AuthLab.Data;
+using AuthLab.Middleware;
 using AuthLab.Models;
 using AuthLab.Services.Implementations;
 using AuthLab.Services.Interfaces;
@@ -110,6 +111,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -133,5 +136,12 @@ app.MapGet("/api/minimal/hello", () => "Hello from minimal API!")
 app.MapGet("/api/minimal/protected", () => "Hello from protected minimal API!")
     .WithTags("Minimal")
     .RequireAuthorization();
+
+app.MapGet("/api/test/exception", () =>
+{
+    throw new Exception("Test exception from middleware");
+})
+   .WithOpenApi()
+    .WithTags("Test");
 
 app.Run();
