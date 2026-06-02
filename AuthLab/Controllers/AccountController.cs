@@ -69,5 +69,46 @@ namespace AuthLab.Controllers
 
             return Ok(authResponse);
         }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(RefreshRequestDto refreshRequestDto)
+        {
+            var validateRefreshToken = await _refreshTokenService.ValidateRefreshToken(refreshRequestDto.RefreshToken);
+
+            if (validateRefreshToken == null)
+            {
+                return Unauthorized("Invalid Refresh Token");
+            }
+
+            var user = await _userManager.FindByIdAsync(validateRefreshToken.UserId);
+            if (user == null)
+            {
+                return Unauthorized("Invalid Refresh Token");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var authResponse = _tokenService.GenerateToken(user, roles);
+
+            await _refreshTokenService.RevokeRefreshToken(validateRefreshToken);
+
+            var refreshToken = await _refreshTokenService.GenerateRefreshToken(user.Id);
+
+            authResponse.RefreshToken = refreshToken;
+
+            return Ok(authResponse);
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(RefreshRequestDto refreshRequestDto)
+        {
+            var refreshToken = await _refreshTokenService.ValidateRefreshToken(refreshRequestDto.RefreshToken);
+            if (refreshToken == null)
+            {
+                return BadRequest("Invalid Refresh Token");
+            }
+            await _refreshTokenService.RevokeRefreshToken(refreshToken);
+            return Ok(new { message = "Logged out successfully" });
+        }
     }
 }
