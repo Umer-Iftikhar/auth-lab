@@ -2,7 +2,6 @@
 
 A hands-on JWT authentication API built with ASP.NET Core 8 and MySQL. Built to deeply understand JWT authentication internals — stateless auth, refresh token rotation, role-based authorization, and authorization policies.
 
-> Built alongside [IndieVault](https://github.com/Umer-Iftikhar/indie-vault) as a focused deep-dive into JWT after completing a full MVC capstone.
 
 ## Screenshots
 
@@ -157,6 +156,7 @@ Development environment automatically seeds an admin account:
 | GET | `/api/test/me` | Bearer | Returns claims from token, no DB call |
 | GET | `/api/test/admin` | Bearer + Admin | Admin only |
 | GET | `/api/test/dashboard` | Bearer + Any Role | Admin or User |
+| GET | `/api/test/exception` | Exception Handling | Public endpoint |
 
 ### Minimal API
 
@@ -164,6 +164,7 @@ Development environment automatically seeds an admin account:
 |--------|----------|------|-------------|
 | GET | `/api/minimal/hello` | No | Public minimal API endpoint |
 | GET | `/api/minimal/protected` | Bearer | Protected minimal API endpoint |
+
 
 ## Token Lifecycle
 
